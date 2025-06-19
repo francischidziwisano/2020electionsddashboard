@@ -11,3 +11,4 @@ contextily
 pathlib
 seaborn
 openpyxl
+anywidget
