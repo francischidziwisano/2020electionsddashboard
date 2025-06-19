@@ -5,3 +5,7 @@ plotly
 pandas
 ridgeplot
 palmerpenguins
+matplotlib
+geopandas
+contextily
+pathlib
