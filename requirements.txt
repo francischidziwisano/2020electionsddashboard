@@ -10,3 +10,4 @@ geopandas
 contextily
 pathlib
 seaborn
+openpyxl
