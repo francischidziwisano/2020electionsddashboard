@@ -6,8 +6,6 @@ app_dir = Path(__file__).parent
 tips = pd.read_csv(app_dir / "tips.csv")
 
 # EXCEL IMPORTS
-import_path = "C:/Users/gchid/Documents/Data Analytics/Data/MEC/Imports/";
-export_path = "C:/Users/gchid/Documents/Data Analytics/Data/MEC/Exports/";
 xlsx_df = "2020-Fresh-Presidential-Election-Results-Per-station.xlsx";
 
 # FUNCTION
@@ -34,7 +32,7 @@ def wrangle_luanar(path):
 
     return df
 
-_1_2020_df_final = wrangle_luanar(import_path + xlsx_df)
+_1_2020_df_final = wrangle_luanar(app_dir / xlsx_df)
 # District Summary
 district_summary = pd.pivot_table(_1_2020_df_final, index=['District Name', 'Region'], values=['Number Of Registred Voters', 'Total Number Voted'], aggfunc='sum')
 district_summary['Voter_Empathy'] = ((district_summary['Number Of Registred Voters'] - district_summary['Total Number Voted']) / district_summary['Number Of Registred Voters']) * 100
@@ -51,5 +49,5 @@ region_summary = region_summary.reset_index()
 region_summary = region_summary.rename(columns={'Number Of Registred Voters' : 'Number_Of_Registred_Voters', 'Total Number Voted': 'Total_Number_Voted'})
 region_summary = region_summary.sort_values(by='Voter_Empathy', ascending=False)
 
-_1_2020_df_final.to_excel(export_path + "first_cleaned_all.xlsx", index=False)
-district_summary.to_excel(export_path + "summary.xlsx", index=True)
+# _1_2020_df_final.to_excel(export_path + "first_cleaned_all.xlsx", index=False)
+# district_summary.to_excel(export_path + "summary.xlsx", index=True)
