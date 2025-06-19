@@ -1,0 +1,7 @@
+faicons
+shiny
+shinywidgets==0.3.0
+plotly
+pandas
+ridgeplot
+palmerpenguins
