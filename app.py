@@ -268,6 +268,7 @@ with ui.layout_columns(col_widths=[9, 3]):
                             range=[10, 60]                                              # Set y-axis range
                     ),
                     # plot_bgcolor="white"  # Background color
+                    margin=dict(l=10, r=10, t=30, b=10)  # Reduce margins for full width
                 )
 
                     return fig
