@@ -140,7 +140,7 @@ with ui.layout_columns(col_widths=[9, 3]):
     with ui.card():
         with ui.div():
             with ui.layout_columns(col_widths=[6, 6]):
-                with ui.card():
+                with ui.card(style="display: flex; flex-direction: row; flex-wrap: wrap; gap: 10px; width: 100%;"):
                     with ui.card_header(
                         class_="d-flex justify-content-between align-items-center",
                         style = "font-weight: bold; font-size: 20px"
