@@ -18,6 +18,9 @@ from shiny import App, reactive, render
 from shiny.express import input, ui, render
 import json
 
+from pathlib import Path
+
+dir = Path(__file__).resolve().parent
 # Step 1: Load Malawi GeoJSON as GeoDataFrame
 with open("mw.json", "r") as f:
     districts_geojson = json.load(f)
@@ -48,26 +51,14 @@ ui.tags.style("""
     """),
 
 # Add page title and sidebar
-ui.page_opts(
-    title=ui.div(
-        ui.tags.img(
-            src="https://en.wikipedia.org/wiki/File:Flag_of_Malawi.svg",  # Image in www/ folder
-            height="40px",
-            style="vertical-align: middle; margin-right: 10px;"
-        ),
-        "Malawi 2020 Elections",
-        style="display: flex; align-items: center;"
-    ),
-    fillable=True
-)
-ui.tags.iframe(src="www/flag.png", height="200px")
-# ui.page_opts(
-#             title=ui.div(
-#             "Malawi 2020 General Elections - Empathy Insights", 
-#             class_="header"),
-#             fillable=True
-#             )
 
+ui.page_opts(
+        title=ui.div(
+            "Malawi 2020 Elections Dashboard",
+            style="text-align: center; margin-right: 10px; font-size: 40px; font-weight: bold;"
+        ),
+        fillable=True
+)
 
 with ui.sidebar(open="desktop"):
     with ui.card():
