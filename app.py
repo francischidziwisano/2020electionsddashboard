@@ -140,48 +140,59 @@ with ui.layout_columns(col_widths=[9, 3]):
     with ui.card():
         with ui.div():
             with ui.layout_columns(col_widths=[6, 6]):
-                with ui.card(style="height: 100%;"):  # Ensure full height
+                with ui.card(style="height: 100%; min-height: 400px;"):  # Set minimum height
                     with ui.card_header(
                         class_="d-flex justify-content-between align-items-center",
-                        style="font-weight: bold; font-size: 1.25rem; padding: 1rem;"  # Better responsive sizing
+                        style="font-weight: bold; font-size: 1.25rem; padding: 1rem;"
                     ):
                         "Voter Empathy by Region"
                     
-                    @render_plotly  # Changed to render_plotly for better integration
+                    @render_plotly
                     def regbar():
                         d = tips_data()
                         
-                        # Create pie chart with better defaults
                         fig = px.pie(
-                            d,  # Pass the whole dataframe
-                            names="Region",  # Direct column reference
+                            d,
+                            names="Region",
                             values="Voter_Empathy",
-                            color="Region",  # Color by region for better distinction
+                            color="Region",
                             color_discrete_sequence=px.colors.sequential.RdBu,
-                            hole=0.3,  # Better donut chart appearance
-                            hover_data=["Voter_Empathy"],  # Additional hover info
+                            hole=0.3,
                         )
                         
-                        # Enhanced chart styling
+                        # Mobile-responsive settings
                         fig.update_traces(
                             textinfo="percent+label",
                             textposition="inside",
                             textfont_size=14,
                             marker=dict(line=dict(color='white', width=1)),
-                            hovertemplate="<b>%{label}</b><br>Empathy: %{value:.1f}%<br>Share: %{percent}</br>",
-                            pull=0.02  # Subtle pull effect on all slices
+                            insidetextorientation='horizontal',  # Better for small screens
                         )
                         
-                        # Responsive layout improvements
                         fig.update_layout(
-                            uniformtext_minsize=12,
-                            uniformtext_mode='hide',
-                            margin=dict(l=20, r=20, t=40, b=20),  # Balanced margins
                             autosize=True,
-                            showlegend=False,
-                            paper_bgcolor='rgba(0,0,0,0)',  # Transparent background
-                            plot_bgcolor='rgba(0,0,0,0)',
+                            margin=dict(l=10, r=10, t=30, b=10),  # Tighter margins
+                            uniformtext_minsize=10,  # Smaller minimum text size
+                            uniformtext_mode='hide',  # Hide text if too small
+                            legend=dict(
+                                orientation="h",  # Horizontal legend for mobile
+                                yanchor="bottom",
+                                y=-0.2,  # Position below chart
+                                xanchor="center",
+                                x=0.5
+                            ),
+                            height=400,  # Fixed height helps with mobile rendering
                         )
+                        
+                        # Mobile-specific adjustments
+                        @reactive.Effect
+                        def _():
+                            if input.device_is_mobile():
+                                fig.update_layout(
+                                    margin=dict(l=5, r=5, t=20, b=5),
+                                    uniformtext_minsize=8,
+                                    height=300,
+                                )
                         
                         return fig
                     
