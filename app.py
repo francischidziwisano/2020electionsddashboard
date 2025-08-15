@@ -140,40 +140,49 @@ with ui.layout_columns(col_widths=[9, 3]):
     with ui.card():
         with ui.div():
             with ui.layout_columns(col_widths=[6, 6]):
-                with ui.card():
+                with ui.card(style="height: 100%;"):  # Ensure full height
                     with ui.card_header(
                         class_="d-flex justify-content-between align-items-center",
-                        style = "font-weight: bold; font-size: 20px"
+                        style="font-weight: bold; font-size: 1.25rem; padding: 1rem;"  # Better responsive sizing
                     ):
-                        "Voter Empathy | By Region"
-                    # regs = region_summary
-
-                    @render_widget
+                        "Voter Empathy by Region"
+                    
+                    @render_plotly  # Changed to render_plotly for better integration
                     def regbar():
-                        # Optional: refresh data
-                        d = tips_data()  # Remove this line if unnecessary
-
-                        # Create an interactive bar chart
+                        d = tips_data()
+                        
+                        # Create pie chart with better defaults
                         fig = px.pie(
-                            names=d["Region"],
-                            values=d["Voter_Empathy"],
+                            d,  # Pass the whole dataframe
+                            names="Region",  # Direct column reference
+                            values="Voter_Empathy",
+                            color="Region",  # Color by region for better distinction
                             color_discrete_sequence=px.colors.sequential.RdBu,
-                            hole=0,  # Makes it a donut chart
+                            hole=0.3,  # Better donut chart appearance
+                            hover_data=["Voter_Empathy"],  # Additional hover info
                         )
-                        # Update to show callouts instead of legend
+                        
+                        # Enhanced chart styling
                         fig.update_traces(
-                            textinfo="label+percent",  # Show both label and percentage
-                            textposition="outside",  # Push labels outside as callouts
-                            textfont_size=20,
-                            pull=[0.05, 0, 0, 0],  # Optional: pull one slice for effect
-                            showlegend=False,  # Hide the legend
+                            textinfo="percent+label",
+                            textposition="inside",
+                            textfont_size=14,
+                            marker=dict(line=dict(color='white', width=1)),
+                            hovertemplate="<b>%{label}</b><br>Empathy: %{value:.1f}%<br>Share: %{percent}</br>",
+                            pull=0.02  # Subtle pull effect on all slices
                         )
+                        
+                        # Responsive layout improvements
                         fig.update_layout(
-                                    plot_bgcolor="white",
-                                    showlegend=False,  # Hide legend if redundant
-                                    autosize=True
-                                )
-
+                            uniformtext_minsize=12,
+                            uniformtext_mode='hide',
+                            margin=dict(l=20, r=20, t=40, b=20),  # Balanced margins
+                            autosize=True,
+                            showlegend=False,
+                            paper_bgcolor='rgba(0,0,0,0)',  # Transparent background
+                            plot_bgcolor='rgba(0,0,0,0)',
+                        )
+                        
                         return fig
                     
                 with ui.card():
