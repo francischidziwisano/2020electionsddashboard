@@ -150,29 +150,29 @@ with ui.layout_columns(col_widths=[9, 3]):
 
                     @render_widget
                     def regbar():
-                        # Optional: refresh data
-                        d = tips_data()  # Remove this line if unnecessary
+                        d = tips_data()
 
-                        # Create an interactive bar chart
                         fig = px.pie(
                             names=d["Region"],
                             values=d["Voter_Empathy"],
                             color_discrete_sequence=px.colors.sequential.RdBu,
-                            hole=0.4,  # Makes it a donut chart
+                            hole=0.4,  # Donut style
                         )
-                        # Update to show callouts instead of legend
+
                         fig.update_traces(
-                            textinfo="label+percent",  # Show both label and percentage
-                            textposition="outside",  # Push labels outside as callouts
-                            textfont_size=20,
-                            pull=[0.05, 0, 0, 0],  # Optional: pull one slice for effect
-                            showlegend=False,  # Hide the legend
+                            textinfo="label+percent",
+                            textposition="outside",
+                            textfont_size=16,
+                            pull=[0.05, 0, 0, 0],
+                            showlegend=False
                         )
+
                         fig.update_layout(
-                                    plot_bgcolor="white",
-                                    showlegend=False,  # Hide legend if redundant
-                                    autosize=True
-                                )
+                            plot_bgcolor="white",
+                            autosize=True,
+                            margin=dict(l=0, r=0, t=20, b=0),
+                            height=None  # Let container control height
+                        )
 
                         return fig
                     
