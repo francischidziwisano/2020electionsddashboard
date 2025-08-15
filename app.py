@@ -173,7 +173,7 @@ with ui.layout_columns(col_widths=[9, 3]):
                             height=None
                         )
 
-                        return fig
+                        return fig, {"responsive": True}
                     
                 with ui.card():
                     with ui.card_header(
