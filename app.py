@@ -140,7 +140,7 @@ with ui.layout_columns(col_widths=[9, 3]):
     with ui.card():
         with ui.div():
             with ui.layout_columns(col_widths=[6, 6]):
-                with ui.card(style="display: flex; flex-direction: row; flex-wrap: wrap; gap: 10px; width: 100%;"):
+                with ui.card():
                     with ui.card_header(
                         class_="d-flex justify-content-between align-items-center",
                         style = "font-weight: bold; font-size: 20px"
@@ -167,6 +167,7 @@ with ui.layout_columns(col_widths=[9, 3]):
                             textfont_size=20,
                             pull=[0.05, 0, 0, 0],  # Optional: pull one slice for effect
                             showlegend=False,  # Hide the legend
+                            autosize=True
                         )
 
                         return fig
@@ -216,6 +217,7 @@ with ui.layout_columns(col_widths=[9, 3]):
                                         tickfont=dict(size=20),
                                         range=[15, 60], gridcolor="lightgrey"
                                     ),
+                                    autosize=True
                                 )
 
                         # fig = px.box(
@@ -245,7 +247,7 @@ with ui.layout_columns(col_widths=[9, 3]):
                     "Voter Empathy | By District"
 
                 @render_widget
-                def bar():
+                def bar(style="display: flex; flex-direction: row; flex-wrap: wrap; gap: 10px; width: 100%;"):
                     d = tips_data()
 
                     fig = px.bar(
@@ -268,7 +270,8 @@ with ui.layout_columns(col_widths=[9, 3]):
                             range=[10, 60]                                              # Set y-axis range
                     ),
                     # plot_bgcolor="white"  # Background color
-                    margin=dict(l=10, r=10, t=30, b=10)  # Reduce margins for full width
+                    margin=dict(l=10, r=10, t=30, b=10),  # Reduce margins for full width
+                    autosize=True
                 )
 
                     return fig
