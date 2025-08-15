@@ -139,14 +139,13 @@ with ui.layout_columns(fill=False):
 with ui.layout_columns(col_widths=[9, 3]):
     with ui.card():
         with ui.div():
-            with ui.layout_columns(col_widths=[6, 6]):
+            with ui.layout_columns(col_widths=[12, 12]):  # stack on small screens
                 with ui.card():
                     with ui.card_header(
                         class_="d-flex justify-content-between align-items-center",
-                        style = "font-weight: bold; font-size: 20px"
+                        style="font-weight: bold; font-size: 20px"
                     ):
                         "Voter Empathy | By Region"
-                    # regs = region_summary
 
                     @render_widget
                     def regbar():
@@ -156,7 +155,7 @@ with ui.layout_columns(col_widths=[9, 3]):
                             names=d["Region"],
                             values=d["Voter_Empathy"],
                             color_discrete_sequence=px.colors.sequential.RdBu,
-                            hole=0.4,  # Donut style
+                            hole=0.4,
                         )
 
                         fig.update_traces(
@@ -171,7 +170,7 @@ with ui.layout_columns(col_widths=[9, 3]):
                             plot_bgcolor="white",
                             autosize=True,
                             margin=dict(l=0, r=0, t=20, b=0),
-                            height=None  # Let container control height
+                            height=None
                         )
 
                         return fig
