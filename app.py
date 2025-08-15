@@ -167,8 +167,12 @@ with ui.layout_columns(col_widths=[9, 3]):
                             textfont_size=20,
                             pull=[0.05, 0, 0, 0],  # Optional: pull one slice for effect
                             showlegend=False,  # Hide the legend
-                            autosize=True
                         )
+                        fig.update_layout(
+                                    plot_bgcolor="white",
+                                    showlegend=False,  # Hide legend if redundant
+                                    autosize=True
+                                )
 
                         return fig
                     
