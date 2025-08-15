@@ -139,41 +139,42 @@ with ui.layout_columns(fill=False):
 with ui.layout_columns(col_widths=[9, 3]):
     with ui.card():
         with ui.div():
-            with ui.layout_columns(col_widths=[12, 12]):  # stack on small screens
+            with ui.layout_columns(col_widths=[6, 6]):
                 with ui.card():
                     with ui.card_header(
                         class_="d-flex justify-content-between align-items-center",
-                        style="font-weight: bold; font-size: 20px"
+                        style = "font-weight: bold; font-size: 20px"
                     ):
                         "Voter Empathy | By Region"
+                    # regs = region_summary
 
                     @render_widget
                     def regbar():
-                        d = tips_data()
+                        # Optional: refresh data
+                        d = tips_data()  # Remove this line if unnecessary
 
+                        # Create an interactive bar chart
                         fig = px.pie(
                             names=d["Region"],
                             values=d["Voter_Empathy"],
                             color_discrete_sequence=px.colors.sequential.RdBu,
-                            hole=0.4,
+                            hole=0,  # Makes it a donut chart
                         )
-
+                        # Update to show callouts instead of legend
                         fig.update_traces(
-                            textinfo="label+percent",
-                            textposition="outside",
-                            textfont_size=16,
-                            pull=[0.05, 0, 0, 0],
-                            showlegend=False
+                            textinfo="label+percent",  # Show both label and percentage
+                            textposition="outside",  # Push labels outside as callouts
+                            textfont_size=20,
+                            pull=[0.05, 0, 0, 0],  # Optional: pull one slice for effect
+                            showlegend=False,  # Hide the legend
                         )
-
                         fig.update_layout(
-                            plot_bgcolor="white",
-                            autosize=True,
-                            margin=dict(l=0, r=0, t=20, b=0),
-                            height=None
-                        )
+                                    plot_bgcolor="white",
+                                    showlegend=False,  # Hide legend if redundant
+                                    autosize=True
+                                )
 
-                        return fig, {"responsive": True}
+                        return fig
                     
                 with ui.card():
                     with ui.card_header(
