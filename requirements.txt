@@ -6,4 +6,5 @@ plotly==5.22.0
 shiny==0.10.1
 shinylive==0.4.0
 shapely==2.1.1
+openpyxl==3.1.5
 shinywidgets==0.3.2
