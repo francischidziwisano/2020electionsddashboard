@@ -76,5 +76,18 @@ region_summary = region_summary.reset_index()
 region_summary = region_summary.rename(columns={'Number Of Registred Voters' : 'Number_Of_Registred_Voters', 'Total Number Voted': 'Total_Number_Voted'})
 region_summary = region_summary.sort_values(by='Voter_Empathy', ascending=False)
 
+# Project Mapping
+projects_path = "data/projects_mapping/projects.xlsx";
+ta_coordinates = "data/projects_mapping/coordinates.xlsx";
+def project_mapping(path1, path2):
+    projects_df = pd.read_excel(path1)
+    coordinates_df = pd.read_excel(path2)
+
+    registered_voted = pd.merge(projects_df, coordinates_df, on="TA", how="left")
+
+    return registered_voted
+projects = project_mapping(app_dir / projects_path, app_dir / ta_coordinates)
+
+projects.head()
 # _1_2020_df_final.to_excel(export_path + "first_cleaned_all.xlsx", index=False)
 # district_summary.to_excel(export_path + "summary.xlsx", index=True)

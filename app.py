@@ -27,7 +27,7 @@ from branca.colormap import linear
 import json
 import copy
 import faicons
-from shared import app_dir, tips, district_summary, region_summary
+from shared import app_dir, tips, district_summary, region_summary, projects
 
 with open("data/mw.json", "r") as f:
     districts_geojson = json.load(f)
@@ -124,24 +124,32 @@ def get_map_theme(mode):
         return basemaps.CartoDB.DarkMatter
 
 
-def create_custom_icon(count):
+def create_custom_icon(count, country):
 
-    size_circle = 45 + (count / 10)
+    # size_circle = 60 + (count/2)
 
     # Define the HTML code for the icon
     html_code = f"""
-    <div style=".leaflet-div-icon.background:transparent !important;
-        position:relative; width: {size_circle}px; height: {size_circle}px;">
-        <svg width="{size_circle}" height="{size_circle}" viewBox="0 0 42 42"
-            class="donut" aria-labelledby="donut-title donut-desc" role="img">
-            <circle class="donut-hole" cx="21" cy="21" r="15.91549430918954"
-                fill="white" role="presentation"></circle>
-            <circle class="donut-ring" cx="21" cy="21" r="15.91549430918954"
-                fill="transparent" stroke="color(display-p3 0.9451 0.6196 0.2196)"
-                stroke-width="3" role="presentation"></circle>
-            <text x="50%" y="60%" text-anchor="middle" font-size="13"
-                font-weight="bold" fill="#000">{count}</text>
-        </svg> Malawi
+    <div style="background: transparent !important;
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                gap: 6px;            
+                width: 100px;
+                height: 100px;">
+
+    <!-- Small dot -->
+    <svg width="12" height="12" viewBox="0 0 10 10">
+                <circle cx="5" cy="5" r="4"
+                        fill="rgb(241,158,56)" stroke="#fff" stroke-width="1"/>
+    </svg>
+
+    <!-- Country label -->
+    <span style="font-size: 10px; color: #000; font-weight: 300;">
+        {country}
+        </br>
+        {count}
+    </span>
     </div>
     """
 
@@ -150,113 +158,68 @@ def create_custom_icon(count):
         icon_size=(50, 50), icon_anchor=(25, 25), html=html_code, class_name="dummy"
     )
 
-
-def create_custom_popup(country, total, dark_mode, color_theme):
-
-    # Group by 'region' and count occurrences of each region
-    df = district_summary
-
-    # Create a pie chart using plotly.graph_objects
-    data = [
-        go.Pie(
-            labels="Region",
-            values="Voter_Empathy",
-            hole=0.3,
-            textinfo="percent+label",
-            marker=dict(colors=get_color_theme(color_theme, "Region")),
-        )
-    ]
-
-    # Set title and template
-    layout = go.Layout(
-        title=f"{total} Community Builders in {country}",
-        template=get_color_template(dark_mode),
-        paper_bgcolor=get_background_color_plotly(dark_mode),
-        title_x=0.5,
-        titlefont=dict(size=20),
-        showlegend=False,
-    )
-
-    figure = go.Figure(data=data, layout=layout)
-    figure.update_traces(
-        textposition="outside", textinfo="percent+label", textfont=dict(size=15)
-    )
-    figure.layout.width = 600
-    figure.layout.height = 400
-
-    popup = Popup(child=go.FigureWidget(figure), max_width=600, max_height=400)
-
-    return popup
-
-
 app_ui = ui.page_fillable(
     ui.page_navbar(
         ui.nav_panel(
-            "Dashboard",
+            "Map",
             ui.row(
                 ui.layout_columns(
-                    ui.output_ui("total_registered_box"),
-                    ui.output_ui("total_voted_box"),
+                    ui.output_ui("total_mapped"),
+                    ui.output_ui("total_mapped_distinct"),
                     # ui.output_ui(int("total_voted_box") / int("total_registered_box")),
-                    ui.output_ui("turn_out_box"),
-                    ui.output_ui("voter_empathy_box"),
+                    ui.output_ui("total_districts"),
+                    ui.output_ui("total_tas"),
                     col_widths=(3, 3, 3, 3),
                 ),
             ),
             ui.row(
                 ui.layout_columns(
                     x.ui.card(
-                        ui.row(
-                            ui.layout_columns(
-                                x.ui.card(output_widget("plot_0")),
-                                x.ui.card(output_widget("plot_1")),
-                                col_widths=(6, 6),
-                            ),
-                        ),
-                        ui.row(
-                            ui.layout_columns(
-                                x.ui.card(output_widget("plot_3")),
-                                col_widths=(12),
-                            ),
-                        ),
+                        output_widget("map_full"),
+                        # id="card_map",
                     ),
-                    x.ui.card(output_widget("plot_5")),
-                    col_widths=(8, 4),
-                ),
-            ),
-        ),
-        ui.nav_panel(
-            "Map",
-            ui.row(
-                ui.card(
-                    output_widget("map_full"),
-                    id="card_map",
+                    # col_widths=(8, 4),
                 ),
             ),
         ),
         title=ui.img(src="images/logo.png", style="max-width:100px;width:100%"),
         id="page",
+        
         sidebar=ui.sidebar(
-            ui.input_slider(
-                "Voter_Empathy",
-                "Voter Turnout Rate",
-                min=bill_rng[0],
-                max=bill_rng[1],
-                value=bill_rng,
-                pre="",
-            ),
             ui.input_checkbox_group(
-                "Region",
-                "Region",
-                ["Southern", "Central", "Northern"],
-                selected=["Southern", "Central", "Northern"],
+                "Pillar",
+                "Pillar",
+                sorted(projects["Pillar"].unique().tolist()),
+                selected=(projects["Pillar"].unique().tolist()),
                 inline=False,
             ),
             ui.input_checkbox_group(
-                "District_Name",
+                "Project_name",
+                "Project Name",
+                sorted(projects["Project_name"].unique().tolist()),
+                selected=(projects["Project_name"].unique().tolist()),
+                
+                inline=False,
+            ),
+            # ui.input_checkbox_group(
+            #     "Region",
+            #     "Region",
+            #     ["Southern", "Central", "Northern"],
+            #     selected=["Southern", "Central", "Northern"],
+            #     inline=False,
+            # ),
+            ui.input_checkbox_group(
+                "DISTRICT_x",
                 "District",
-                sorted(district_summary["District_Name"].unique().tolist()),
-                selected=(district_summary["District_Name"].unique().tolist()),
+                sorted(projects["DISTRICT_x"].unique().tolist()),
+                selected=(projects["DISTRICT_x"].unique().tolist()),
+                inline=False,
+            ),
+            ui.input_checkbox_group(
+                "TA",
+                "TA",
+                sorted(projects["TA"].unique().tolist()),
+                selected=(projects["TA"].unique().tolist()),
                 inline=False,
             ),
             ui.input_action_button("reset", "Reset filter"),
@@ -309,81 +272,78 @@ app_ui = ui.page_fillable(
     icon="images/favicon.ico",
 )
 
-
 def server(input, output, session):
-
+    
+    # @output
     @reactive.calc
+    # @render.ui
     def tips_data():
-        bill = input.Voter_Empathy()
-        idx1 = district_summary.Voter_Empathy.between(bill[0] - 1, bill[1] + 1)
-        idx2 = district_summary.Region.isin(input.Region())
-        idx3 = district_summary.District_Name.isin(input.District_Name())
-        return district_summary[idx1 & idx2 & idx3]
-
+            # bill = input.Voter_Empathy()
+            idx1 = projects.Project_name.isin(input.Project_name())
+            idx2 = projects.Pillar.isin(input.Pillar())
+            # idx2 = district_summary.Region.isin(input.Region())
+            idx3= projects.DISTRICT_x.isin(input.DISTRICT_x())
+            idx4 = projects.TA.isin(input.TA())
+            return projects[idx1 & idx2 & idx3 & idx4]
+    
+# MAPPED PROJECTS BOXES
+# total mapped projects
     @output
     @render.ui
-    def total_registered_box():
+    def total_mapped():
         d = tips_data()
         return ui.value_box(
-            title="Total Registered Votes",
+            title="Projects Mapped",
             showcase=faicons.icon_svg(
                 "people-group", width="50px", fill="#FD9902 !important"
             ),
-            value=f"{int(d.Number_Of_Registred_Voters.sum()):,}",
+            value=f"{int(d.TA.count()):,}",
         )
-
+    
+# total mapped projects
     @output
     @render.ui
-    def total_voted_box():
+    def total_mapped_distinct():
         d = tips_data()
         return ui.value_box(
-            title="Total Voted",
+            title="Unique Projects",
             showcase=faicons.icon_svg(
-                "user-check", width="50px", fill="#FD9902 !important"
+                "people-group", width="50px", fill="#FD9902 !important"
             ),
-            value=f"{int(d.Total_Number_Voted.sum()):,}",
+            value=f"{int(d.Project_name.nunique()):,}",
         )
-
+        
+# total districts
     @output
     @render.ui
-    def turn_out_box():
+    def total_districts():
         d = tips_data()
-        total_registered = round(
-            (d.Total_Number_Voted.sum() / d.Number_Of_Registred_Voters.sum()) * 100, 1
-        )
         return ui.value_box(
-            title="Turn Out Rate",
+            title="Districts",
             showcase=faicons.icon_svg(
-                "circle-check", width="50px", fill="#FD9902 !important"
+                "people-group", width="50px", fill="#FD9902 !important"
             ),
-            value=f"{total_registered} %",
+            value=f"{int(d.DISTRICT_x.nunique()):,}",
         )
-
+# total ta's
     @output
     @render.ui
-    def voter_empathy_box():
+    def total_tas():
         d = tips_data()
-        voter_empathy = round(
-            (
-                (d.Number_Of_Registred_Voters.sum() - d.Total_Number_Voted.sum())
-                / d.Number_Of_Registred_Voters.sum()
-            )
-            * 100,
-            1,
-        )
         return ui.value_box(
-            title="Voter Empathy",
+            title="TA's",
             showcase=faicons.icon_svg(
-                "circle-xmark", width="50px", fill="#FD9902 !important"
+                "people-group", width="50px", fill="#FD9902 !important"
             ),
-            value=f"{voter_empathy} %",
+            value=f"{int(d.TA.nunique()):,}",
         )
 
     @reactive.Calc
     @output
     @render_widget
-    @reactive.event(input.dark_mode)
+    # @reactive.event(input.dark_mode)
     def map_full():
+        d = tips_data()
         map = Map(
             basemap=get_map_theme(input.dark_mode()),
             center=(-13.254308, 34.301525),
@@ -391,30 +351,24 @@ def server(input, output, session):
             scroll_wheel_zoom=True,
         )
 
-        with ui.Progress(min=0, max=len(district_summary)) as progress:
+        with ui.Progress(min=0, max=len(d)) as progress:
             progress.set(
                 message="Calculation in progress", detail="This may take a while..."
             )
 
-            for index, row in district_summary.iterrows():
-                lat = float(row["Latitude"])
-                lon = float(row["Longtude"])
-                country = row["District_Name"]
-                count = row["Voter_Empathy"]
+            for index, row in d.iterrows():
+                lat = float(row["Y_COORD"])
+                lon = float(row["X_COORD"])
+                country = row["TA"]
+                count = row["Project_name"]
 
                 # Add a marker with the custom icon to the map
-                custom_icon = create_custom_icon(count)
-
-                # Create custom Pie chart with Community Builders from each country
-                # custom_popup = create_custom_popup(
-                #     country, count, input.dark_mode(), input.color_theme()
-                # )
+                custom_icon = create_custom_icon(count, country)
 
                 marker = Marker(
                     location=(lat, lon),
                     icon=custom_icon,
-                    draggable=False,
-                    # popup=custom_popup,
+                    draggable=False
                 )
 
                 map.add_layer(marker)
@@ -426,206 +380,6 @@ def server(input, output, session):
             progress.set(index, message="Rendering the map...")
 
         return map
-
-    @reactive.Calc
-    @output
-    @render_plotly_streaming()
-    def plot_0():
-        d = tips_data()
-        fig1 = px.pie(
-            d,
-            names="Region",
-            values="Voter_Cast",
-            hole=0.5,
-            # labels={"Region": "Region", "count": "Voter_Empathy"},
-            title="Voter Turnout by Region",
-            template=get_color_template(input.dark_mode()),
-            color="Voter_Cast",
-            color_discrete_sequence=px.colors.sequential.Oryel,
-        )
-
-        fig1.update_layout(
-            paper_bgcolor=get_background_color_plotly(input.dark_mode()), title_x=0.5
-        )
-        fig1.update_traces(
-            textposition="outside",
-            textinfo="percent+label",
-            hovertemplate="<b>%{label}</b><br>Voter Turnout: %{percent}<extra></extra>",
-            textfont=dict(size=15),
-        )
-        fig1.update_layout(showlegend=False)
-
-        return fig1
-
-    @reactive.Calc
-    @output
-    @render_widget
-    def plot_1():
-        d = tips_data()
-        # Create the bar plot
-        fig3 = px.bar(
-            region_summary,
-            x="Region",
-            y="Voter_Empathy",
-            color="Voter_Empathy",
-            # color_discrete_sequence = ["Oryel"],  # Or "Blues", "Plasma", etc.
-            color_continuous_scale = "Oryel",
-            # text="Voter_Turnout",
-            # text_auto=True,
-            # labels={
-            #     "district": "Region",
-            #     "count": "Voter_Turnout",
-            #     "region": "Region",
-            #     "location": "Latitude",
-            # },
-            title="Voter Turnout by Region",
-            template=get_color_template(input.dark_mode()),
-        )
-        fig3.update_layout(
-            xaxis=dict(
-                tickfont=dict(size=14, color="black"),  # X-axis tick labels
-                showgrid=False,  # Hide x-axis gridlines
-            ),
-            yaxis=dict(
-                tickfont=dict(size=15, color="black"),  # Y-axis tick labels
-                gridcolor="lightgray",  # Y-axis gridline color
-                range=[5, 40],  # Set y-axis range
-            ),
-        )
-        return fig3     
-
-    @reactive.Calc
-    @output
-    @render_widget
-    def plot_5():
-        d = tips_data()  # Your reactive filtered dataframe
-
-        fig5 = Map(center=(-13.254308, 34.301525), zoom=7)
-
-        # Safe copy of geojson and filter districts
-        geojson_fixed = copy.deepcopy(districts_geojson)
-        district_names = d["District_Name"].str.strip().tolist()
-        geojson_fixed["features"] = [
-            f
-            for f in geojson_fixed["features"]
-            if f["properties"]["name"].strip() in district_names
-        ]
-
-        # Assign ID for Choropleth
-        for f in geojson_fixed["features"]:
-            f["id"] = f["properties"]["name"].strip()
-
-        # Colormap
-        values = list(d["Voter_Empathy"])
-        colormap = linear.Oranges_04.scale(min(values), max(values))
-        colormap.caption = "Voter Empathy (%)"
-
-        # Choropleth layer
-        choro = Choropleth(
-            geo_data=geojson_fixed,
-            choro_data={
-                k.strip(): v for k, v in zip(d["District_Name"], d["Voter_Empathy"])
-            },
-            key_on="id",
-            colormap=colormap,
-            hover_style={"fillOpacity": 0.9, "color": "red"},
-            border_color="black",
-            style={"fillOpacity": 0.8, "dashArray": "5, 5"},
-        )
-        fig5.add_layer(choro)
-
-        # Label marker holder
-        label_marker = []
-
-        # Hover callback
-        def on_hover(event, feature, **kwargs):
-            nonlocal label_marker
-            if label_marker:
-                fig5.remove_layer(label_marker[0])
-                label_marker = []
-            if event == "mouseover":
-                geom = shape(feature["geometry"])
-                centroid = geom.centroid
-                name = feature["properties"]["name"].strip()
-                voter_empathy = d.loc[
-                    d["District_Name"].str.strip() == name, "Voter_Empathy"
-                ].values[0]
-
-                marker = Marker(
-                    location=(centroid.y, centroid.x),
-                    icon=DivIcon(
-                        html=f"""
-                            <div style="
-                                display:inline-block;
-                                text-align:center;
-                                white-space:nowrap;
-                                font-size:12pt;
-                                color:black;
-                                background:white;
-                                padding:2px 6px;
-                                border-radius:4px;
-                                border:1px solid gray;
-                            ">
-                                <div>{name}</div>
-                                <div style="font-size:12pt; color:darkgreen;">{round(voter_empathy)}%</div>
-                            </div>
-                            """
-                    ),
-                )
-                fig5.add_layer(marker)
-                label_marker = [marker]
-
-        # Invisible GeoJSON layer for hover detection
-        geo = GeoJSON(
-            data=geojson_fixed,
-            style={"color": "transparent", "fillOpacity": 0},
-            hover_style={"fillOpacity": 0.1},
-        )
-        geo.on_hover(on_hover)
-        fig5.add_layer(geo)
-
-        # Controls
-        fig5.add_control(LayersControl())
-        fig5.add_control(colormap)
-
-        return fig5
-
-    @reactive.Calc
-    @output
-    @render_plotly_streaming()
-    def plot_3():
-        d = tips_data()
-        # Create the bar plot
-        fig3 = px.bar(
-            d,
-            x="District_Name",
-            y="Voter_Empathy",
-            color="Voter_Empathy",
-            color_continuous_scale="Oryel",  # Or "Blues", "Plasma", etc.
-            text="Voter_Empathy",
-            text_auto=True,
-            labels={
-                "district": "District_Name",
-                "count": "Voter_Empathy",
-                "region": "Region",
-                "location": "Latitude",
-            },
-            title="Voter Turnout by District",
-            template=get_color_template(input.dark_mode()),
-        )
-        fig3.update_layout(
-            xaxis=dict(
-                tickfont=dict(size=14, color="black"),  # X-axis tick labels
-                showgrid=False,  # Hide x-axis gridlines
-            ),
-            yaxis=dict(
-                tickfont=dict(size=15, color="black"),  # Y-axis tick labels
-                gridcolor="lightgray",  # Y-axis gridline color
-                range=[10, 60],  # Set y-axis range
-            ),
-        )
-        return fig3
-
 
 static_dir = Path(__file__).parent / "static"
 app = App(app_ui, server, static_assets=static_dir)
