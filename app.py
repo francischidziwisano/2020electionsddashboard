@@ -12,6 +12,7 @@ from ipyleaflet import (
     Popup,
     DivIcon,
     Marker,
+    ScaleControl,
 )
 from shiny import App, reactive, ui, render
 from shinywidgets import output_widget, render_widget
@@ -27,7 +28,7 @@ from branca.colormap import linear
 import json
 import copy
 import faicons
-from shared import app_dir, tips, district_summary, region_summary, projects
+from shared import app_dir, tips, projects
 
 with open("data/mw.json", "r") as f:
     districts_geojson = json.load(f)
@@ -45,10 +46,10 @@ category_colors = {
     "Storage": 9,
     "Game Tech": 10,
 }
-bill_rng = (
-    min(district_summary.Voter_Empathy.round()),
-    max(district_summary.Voter_Empathy.round()),
-)
+# bill_rng = (
+#     min(district_summary.Voter_Empathy.round()),
+#     max(district_summary.Voter_Empathy.round()),
+# )
 
 
 def get_color_theme(theme, list_categories=None):
@@ -124,7 +125,7 @@ def get_map_theme(mode):
         return basemaps.CartoDB.DarkMatter
 
 
-def create_custom_icon(count, country):
+def create_custom_icon(project_summary, ta_name):
 
     # size_circle = 60 + (count/2)
 
@@ -136,7 +137,8 @@ def create_custom_icon(count, country):
                 justify-content: flex-start;
                 gap: 6px;            
                 width: 100px;
-                height: 100px;">
+                height: 100px;
+                ">
 
     <!-- Small dot -->
     <svg width="12" height="12" viewBox="0 0 10 10">
@@ -145,10 +147,8 @@ def create_custom_icon(count, country):
     </svg>
 
     <!-- Country label -->
-    <span style="font-size: 10px; color: #000; font-weight: 300;">
-        {country}
-        </br>
-        {count}
+    <span style="font-size: 10px; color: #000; font-weight: 300; width:50px;">
+        {ta_name} : {project_summary}
     </span>
     </div>
     """
@@ -157,6 +157,49 @@ def create_custom_icon(count, country):
     return DivIcon(
         icon_size=(50, 50), icon_anchor=(25, 25), html=html_code, class_name="dummy"
     )
+
+
+pillars = [
+    "1 - Agriculture",
+    "2 - Industrialization",
+    "3 - Urbanisation",
+    "4 - Private sector",
+    "5 - Human capital",
+    "6 - Mindset Change",
+    "7 - Public sector",
+    "8 - Economic Infrastructure",
+    "9 - Effective Governance systems and Institutions",
+    "10 - Environmental sustainability",
+]
+
+agricodes = [
+    '101 - Affordable Input Program (AIP)',
+    '102 - AGCOM 2/MFSRP',
+    '103 - AIYAP',
+    '104 - Completion of Kameme EPA Office Block & Furniture',
+    '105 - Construction of Kameme EPA Office Block',
+    '106 - Construction of schemes',
+    '107 - Construction of Thola-ilola irrigation scheme',
+    '108 - Empowering vulnerable population through climate smart and agroecological practices and gender equality ',
+    '109 - Fish Feed Meal',
+    '110 - Greenbelt Initiative (GBI)',
+    '111 - Implementation of River Diversion ',
+    '112 - Installation of solar ',
+    '113 - Kukolola Project',
+    '114 - Lura Intake Weir Water Rehabilitation Project',
+    '115 - Maintenance of existing irrigation schemes',
+    '116 - National irrigation stratrgy',
+    '117 - Nthola irrigation scheme',
+    '118 - Programme for Rural Irrigation Development (PRIDE)',
+    '119 - Scaling Up Climate-Adapted Agriculture in Malawi and Mozambique (MAMO II)',
+    '120 - Sustainable Capture Fisheries and Aquaculture Development Project (SFAD)',
+    '121 - The Agricultural Commercialization (AGCOM)',
+    '122 - TRADE',
+    '123 - Transform (Sustainable Food Systemes for Rural Agricultutre)',
+    '124 - Transforming Agriculture Through Diversification and Entrepreneurship',
+    '125 - Ulimi ndi Chilengedwe (UCHI)',
+    '126 - Youth Economic Empowerment'
+]
 
 app_ui = ui.page_fillable(
     ui.page_navbar(
@@ -178,51 +221,92 @@ app_ui = ui.page_fillable(
                         output_widget("map_full"),
                         # id="card_map",
                     ),
-                    # col_widths=(8, 4),
+                    x.ui.card(
+                        ui.row(
+                            x.ui.card(
+                                ui.card_header("Pillars & Enablers - Key"),
+                                ui.div(
+                                    ui.tags.ul(
+                                        *[
+                                            ui.tags.li(pillar, class_="list-group-item")
+                                            for pillar in pillars
+                                        ],
+                                        class_="list-group",
+                                        style="font-size: 12px;",  # dynamically generate <li> elements
+                                    ),
+                                    style="max-height: auto; overflow-y: auto; padding: 10px; style:none;",
+                                ),
+                            )
+                        ),
+                        ui.row(x.ui.card()),
+                    ),
+                    col_widths=(9, 3),
                 ),
+            ),
+        ),
+        ui.nav_panel(
+            "Projects & Codes",
+            ui.row(
+                x.ui.card(
+                    ui.card_header("Agriculture"),
+                    ui.div(
+                        ui.tags.ul(
+                            *[
+                                ui.tags.li(agricode, class_="list-group-item")
+                                for agricode in agricodes
+                            ],
+                            class_="list-group",
+                            style="font-size: 12px;",  # dynamically generate <li> elements
+                        ),
+                        style="max-height: auto; overflow-y: auto; padding: 10px; style:none;",
+                    ),
+                )
             ),
         ),
         title=ui.img(src="images/logo.png", style="max-width:100px;width:100%"),
         id="page",
-        
         sidebar=ui.sidebar(
-            ui.input_checkbox_group(
-                "Pillar",
-                "Pillar",
-                sorted(projects["Pillar"].unique().tolist()),
-                selected=(projects["Pillar"].unique().tolist()),
-                inline=False,
+            ui.div(
+                ui.input_checkbox_group(
+                    "Pillar",
+                    "Pillar",
+                    sorted(projects["Pillar"].unique().tolist()),
+                    selected=projects["Pillar"].unique().tolist(),
+                    inline=False,
+                ),
+                style="max-height: 150px; overflow-y: auto;",
             ),
-            ui.input_checkbox_group(
-                "Project_name",
-                "Project Name",
-                sorted(projects["Project_name"].unique().tolist()),
-                selected=(projects["Project_name"].unique().tolist()),
-                
-                inline=False,
+            ui.div(
+                ui.input_checkbox_group(
+                    "Project_name",
+                    "Project Name",
+                    sorted(projects["Project_name"].unique().tolist()),
+                    selected=(projects["Project_name"].unique().tolist()),
+                    inline=False,
+                ),
+                style="max-height: 150px; overflow-y: auto;",
             ),
-            # ui.input_checkbox_group(
-            #     "Region",
-            #     "Region",
-            #     ["Southern", "Central", "Northern"],
-            #     selected=["Southern", "Central", "Northern"],
-            #     inline=False,
-            # ),
-            ui.input_checkbox_group(
-                "DISTRICT_x",
-                "District",
-                sorted(projects["DISTRICT_x"].unique().tolist()),
-                selected=(projects["DISTRICT_x"].unique().tolist()),
-                inline=False,
+            ui.div(
+                ui.input_checkbox_group(
+                    "DISTRICT_x",
+                    "District",
+                    sorted(projects["DISTRICT_x"].unique().tolist()),
+                    selected=(projects["DISTRICT_x"].unique().tolist()),
+                    inline=False,
+                ),
+                style="max-height: 150px; overflow-y: auto;",
             ),
-            ui.input_checkbox_group(
-                "TA",
-                "TA",
-                sorted(projects["TA"].unique().tolist()),
-                selected=(projects["TA"].unique().tolist()),
-                inline=False,
+            ui.div(
+                ui.input_checkbox_group(
+                    "TA_x",
+                    "TA",
+                    sorted(projects["TA_x"].unique().tolist()),
+                    selected=(projects["TA_x"].unique().tolist()),
+                    inline=False,
+                ),
+                style="max-height: 150px; overflow-y: auto;",
             ),
-            ui.input_action_button("reset", "Reset filter"),
+            ui.input_action_button("reset_filters", "Reset filters"),
             ui.input_dark_mode(id="dark_mode", mode="light"),
             open="closed",
             # style="width: 100%; --bs-accent: #FD9902; color: #FD9902; height: 8px;",
@@ -272,22 +356,19 @@ app_ui = ui.page_fillable(
     icon="images/favicon.ico",
 )
 
+
 def server(input, output, session):
-    
-    # @output
     @reactive.calc
-    # @render.ui
-    def tips_data():
-            # bill = input.Voter_Empathy()
-            idx1 = projects.Project_name.isin(input.Project_name())
-            idx2 = projects.Pillar.isin(input.Pillar())
-            # idx2 = district_summary.Region.isin(input.Region())
-            idx3= projects.DISTRICT_x.isin(input.DISTRICT_x())
-            idx4 = projects.TA.isin(input.TA())
-            return projects[idx1 & idx2 & idx3 & idx4]
-    
-# MAPPED PROJECTS BOXES
-# total mapped projects
+    def tips_data():   
+        idx2 = projects.Pillar.isin(input.Pillar())
+        idx1 = projects.Project_name.isin(input.Project_name())
+        # idx2 = district_summary.Region.isin(input.Region())
+        idx3 = projects.DISTRICT_x.isin(input.DISTRICT_x())
+        idx4 = projects.TA_x.isin(input.TA_x())
+        return projects[idx1 & idx2 & idx3 & idx4]
+
+    # MAPPED PROJECTS BOXES
+    # total mapped projects
     @output
     @render.ui
     def total_mapped():
@@ -297,10 +378,10 @@ def server(input, output, session):
             showcase=faicons.icon_svg(
                 "people-group", width="50px", fill="#FD9902 !important"
             ),
-            value=f"{int(d.TA.count()):,}",
+            value=f"{int(d.TA_x.count()):,}",
         )
-    
-# total mapped projects
+
+    # total mapped projects
     @output
     @render.ui
     def total_mapped_distinct():
@@ -312,8 +393,8 @@ def server(input, output, session):
             ),
             value=f"{int(d.Project_name.nunique()):,}",
         )
-        
-# total districts
+
+    # total districts
     @output
     @render.ui
     def total_districts():
@@ -325,7 +406,8 @@ def server(input, output, session):
             ),
             value=f"{int(d.DISTRICT_x.nunique()):,}",
         )
-# total ta's
+
+    # total ta's
     @output
     @render.ui
     def total_tas():
@@ -335,7 +417,7 @@ def server(input, output, session):
             showcase=faicons.icon_svg(
                 "people-group", width="50px", fill="#FD9902 !important"
             ),
-            value=f"{int(d.TA.nunique()):,}",
+            value=f"{int(d.TA_x.nunique()):,}",
         )
 
     @reactive.Calc
@@ -343,50 +425,92 @@ def server(input, output, session):
     @render_widget
     # @reactive.event(input.dark_mode)
     def map_full():
-        d = tips_data()
+        d = tips_data()  # your dataset
+
+        # Create the map
         map = Map(
             basemap=get_map_theme(input.dark_mode()),
             center=(-13.254308, 34.301525),
             zoom=7,
             scroll_wheel_zoom=True,
         )
+        #################################################
+        with open("data/mw.json", "r") as f:
+            districts_geojson = json.load(f)
 
-        with ui.Progress(min=0, max=len(d)) as progress:
+        # Safe copy of geojson and filter districts
+        geojson_fixed = copy.deepcopy(districts_geojson)
+        district_names = d["DISTRICT_x"].str.strip().tolist()
+        geojson_fixed["features"] = [
+            f
+            for f in geojson_fixed["features"]
+            if f["properties"]["name"].strip() in district_names
+        ]
+
+        # Assign ID for Choropleth
+        for f in geojson_fixed["features"]:
+            f["id"] = f["properties"]["name"].strip()
+        ##################################################
+        # Group by TA so each TA appears once
+        ta_groups = d.groupby("TA_x")
+
+        with ui.Progress(min=0, max=len(ta_groups)) as progress:
             progress.set(
                 message="Calculation in progress", detail="This may take a while..."
             )
 
-            for index, row in d.iterrows():
-                lat = float(row["Y_COORD"])
-                lon = float(row["X_COORD"])
-                country = row["TA"]
-                count = row["Project_name"]
+            for index, (ta_name, group) in enumerate(ta_groups):
+                # Use first record’s coordinates for the TA
+                base_lat = float(group["latitude"].iloc[0])
+                base_lon = float(group["longitude"].iloc[0])
 
-                # Add a marker with the custom icon to the map
-                custom_icon = create_custom_icon(count, country)
+                # Combine project names
+                projects_list = group["Project_Code"].unique().tolist()
+                project_numbers = [
+                    str(p).lstrip(
+                        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+                    )
+                    for p in projects_list
+                ]
+                project_summary = ", ".join(project_numbers)
 
+                # Create a custom icon showing project count or TA name
+                custom_icon = create_custom_icon((project_summary), ta_name)
+
+                # Create the marker
                 marker = Marker(
-                    location=(lat, lon),
+                    location=(base_lat, base_lon),
                     icon=custom_icon,
-                    draggable=False
+                    draggable=False,
                 )
-
                 map.add_layer(marker)
 
-                progress.set(index, message=f"Calculating country {country}")
+                progress.set(
+                    index, message=f"Added {ta_name} ({len(projects_list)} projects)"
+                )
+            #####################################
+            # Choropleth layer
+            choro = Choropleth(
+                geo_data=geojson_fixed,
+                choro_data={str(k).strip(): 1 for k in d["DISTRICT_x"] if pd.notna(k)},
+                key_on="id",
+                border_color="Red",
+                style={
+                    "fillOpacity": 0,  # transparent fill
+                    "color": "brown",  # border color
+                    "weight": 4,
+                    "opacity": 0.3,
+                },
+            )
+            map.add_layer(choro)
 
-            map.add_control(leaflet.ScaleControl(position="bottomleft"))
-
-            progress.set(index, message="Rendering the map...")
+            #####################################
+            # Add scale control
+            map.add_control(ScaleControl(position="bottomleft"))
+            progress.set(len(ta_groups), message="Rendering the map...")
 
         return map
+    
 
 static_dir = Path(__file__).parent / "static"
 app = App(app_ui, server, static_assets=static_dir)
-
-# @reactive.effect
-# @reactive.event(input.reset)
-# def _():
-#     ui.update_slider("Voter_Empathy", value=bill_rng)
-#     ui.update_checkbox_group("Region", selected=["Southern", "Central", "Northern"])
-#     ui.update_checkbox_group("District_Name", selected=(district_summary["District_Name"].unique().tolist()))
