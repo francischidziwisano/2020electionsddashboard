@@ -1,5 +1,5 @@
 from pathlib import Path
-
+import pyproj
 import pandas as pd
 
 app_dir = Path(__file__).parent
@@ -79,7 +79,9 @@ tips = pd.read_csv(app_dir / "tips.csv")
 # Project Mapping
 projects_path = "data/projects_mapping/projects.xlsx";
 ta_coordinates = "data/projects_mapping/mwi_admin3_nso_points.xlsx";
-
+utm36s = pyproj.CRS("EPSG:32736")  # UTM Zone 36S
+wgs84 = pyproj.CRS("EPSG:4326")    # Lat/lon in decimal degrees
+transformer = pyproj.Transformer.from_crs(utm36s, wgs84, always_xy=True)
 projects_codes = {
                     'A101':  'Affordable Input Program (AIP)',
                     'A102':  'AGCOM 2/MFSRP',
@@ -204,7 +206,7 @@ def project_mapping(path1, path2):
     coordinates_df["KEY"] = coordinates_df["DISTRICT"] + "_" + coordinates_df["TA"]
     coordinates_df["latitude"] = round((coordinates_df["latitude"].astype(float)), 5)
     coordinates_df["longitude"] = round((coordinates_df["longitude"].astype(float)), 5)
-
+    # coordinates_df["longitude"], coordinates_df["latitude"] = transformer.transform(coordinates_df["longitude"], coordinates_df["latitude"])
 
     registered_voted = pd.merge(projects_df, coordinates_df, on="KEY", how="left")
     registered_voted = registered_voted.dropna()
