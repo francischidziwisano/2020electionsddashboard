@@ -256,6 +256,17 @@ summary_mask = ["Agriculture_pct",
                 "Overall"]
 
 projects_summary = projects_summary[summary_mask]
+projects_summary = projects_summary.rename(columns={"DISTRICT_x": "District",
+                                                    "Agriculture_pct": "01",  
+                                                    "Industrialization_pct": "02", 
+                                                    "Urbanisation_pct": "03",
+                                                    "Mindset_Change_pct": "04",
+                                                    "Effective_Governance_Systems_Institutions_pct": "05", 
+                                                    "Private_Sector_pct": "06",
+                                                    "Enhanced_Public_Sector_Performance_pct": "07", 
+                                                    "Human_Capital_Development_pct": "08",
+                                                    "Economic_Infrastructure_pct": "09",
+                                                    "Environmental_Sustainability_pct": "10"})
 
 # Remove column name grouping
 projects_summary.columns.name = None

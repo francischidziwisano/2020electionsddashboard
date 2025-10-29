@@ -29,7 +29,7 @@ from branca.colormap import linear
 import json
 import copy
 import faicons
-from shared import app_dir, tips, projects, projects_codes
+from shared import app_dir, tips, projects, projects_codes, projects_summary
 
 with open("data/mw.json", "r") as f:
     districts_geojson = json.load(f)
@@ -258,6 +258,62 @@ app_ui = ui.page_fillable(
                 )
             ),
         ),
+        ui.nav_panel(
+            "Analytics",
+            ui.row(
+                x.ui.card(
+                    ui.card_header("Pillars or Enablers by District"),
+                    # 🔹 Colored key section
+                    ui.div(
+                        ui.tags.li(
+                            ui.tags.span("Agriculture", class_="badge ms-2", style="background:#4CAF50"),
+                            ui.tags.span("Industrialization", class_="badge ms-2", style="background:#E91E63"),
+                            ui.tags.span("Urbanisation", class_="badge ms-2", style="background:#2196F3"),
+                            ui.tags.span("Private Sector", class_="badge ms-2", style="background:#FF9800"),
+                            ui.tags.span("Human Capital Development", class_="badge ms-2", style="background:#9C27B0"),
+                            ui.tags.span("Mindset Change", class_="badge ms-2", style="background:#795548"),
+                            ui.tags.span("Enhanced Public Sector Performance", class_="badge ms-2", style="background:#9FDEF1"),
+                            ui.tags.span("Economic Infrastructure", class_="badge ms-2", style="background:#2A5D78"),
+                            ui.tags.span("Effective Governance Systems & Institutions", class_="badge ms-2", style="background:#A8577B"),
+                            ui.tags.span("Environmental sustainability", class_="badge ms-2", style="background:#C2C4E3"),
+                            class_="list-group-item d-flex justify-content-between align-items-center",
+                        )
+                    ),
+                    ui.div(
+                        ui.output_data_frame("district_vs_pillars"),
+                        ),
+                )
+            ),
+        ),        
+        ui.nav_panel(
+            "Analytics 2",
+            ui.row(
+                x.ui.card(
+                    ui.card_header("Detailed Analytics for each Pillar"),
+                    # 🔹 Colored key section
+                    ui.div(
+                        ui.tags.li(
+                            ui.tags.span("Agriculture", class_="badge ms-2", style="background:#4CAF50"),
+                            ui.tags.span("Industrialization", class_="badge ms-2", style="background:#E91E63"),
+                            ui.tags.span("Urbanisation", class_="badge ms-2", style="background:#2196F3"),
+                            ui.tags.span("Private Sector", class_="badge ms-2", style="background:#FF9800"),
+                            ui.tags.span("Human Capital Development", class_="badge ms-2", style="background:#9C27B0"),
+                            ui.tags.span("Mindset Change", class_="badge ms-2", style="background:#795548"),
+                            ui.tags.span("Enhanced Public Sector Performance", class_="badge ms-2", style="background:#9FDEF1"),
+                            ui.tags.span("Economic Infrastructure", class_="badge ms-2", style="background:#2A5D78"),
+                            ui.tags.span("Effective Governance Systems & Institutions", class_="badge ms-2", style="background:#A8577B"),
+                            ui.tags.span("Environmental sustainability", class_="badge ms-2", style="background:#C2C4E3"),
+                            class_="list-group-item d-flex justify-content-between align-items-center",
+                        )
+                    ),
+                    ui.div(
+                        ui.output_ui("detailed_analytics"),
+                        class_="list-group",
+                        style="max-height: auto; overflow-y: auto; padding: 10px; style:none;",
+                    ),
+                )
+            ),
+        ),
         title=ui.div(
             ui.img(
                 src="images/logo.png", style="max-height: 40px; vertical-align: middle;"
@@ -347,8 +403,20 @@ app_ui = ui.page_fillable(
         window_title="National Planning Commission - Projects Mapping",
         # --- Inject custom CSS ---
     ),
+
     ui.tags.style(
         """
+        th:nth-child(2) { background-color: #4CAF50;}
+        th:nth-child(3) { background-color: #E91E63;}      
+        th:nth-child(4) { background-color: #2196F3;}
+        th:nth-child(5) { background-color: #795548;}
+        th:nth-child(6) { background-color: #A8577B;}
+        th:nth-child(7) { background-color: #FF9800;}
+        th:nth-child(8) { background-color: #9FDEF1;}
+        th:nth-child(9) { background-color: #9C27B0;}
+        th:nth-child(10) { background-color: #2A5D78;}
+        th:nth-child(11) { background-color: #C2C4E3;}
+
         .navbar-nav {
             margin-left: auto !important;
         }
@@ -542,7 +610,7 @@ def server(input, output, session):
             )
 
         return ui.tags.ul(*items, class_="list-group")
-
+    ####################### PROJECTS MAPPED FOR EACH PILLAR ##############
     @output
     @render.ui
     def pillar_list():
@@ -589,7 +657,209 @@ def server(input, output, session):
         ]
 
         return ui.tags.ul(*items, class_="list-group")
+    
+    ####################### DETAILED ANALYTICS ##############
+    @output
+    @render.ui
+    def detailed_analytics():
+        pillar_colors = {
+            "Agriculture": "#4CAF50",
+            "Industrialization": "#E91E63",
+            "Urbanisation": "#2196F3",
+            "Private Sector": "#FF9800",
+            "Human Capital Development": "#9C27B0",
+            "Mindset Change": "#795548",
+            "Enhanced Public Sector Performance": "#9FDEF1",
+            "Economic Infrastructure": "#2A5D78",
+            "Effective Governance Systems & Institutions": "#A8577B",
+            "Environmental sustainability": "#C2C4E3",
+        }
 
+        d = tips_data()
+
+        if d.empty:
+            return ui.div(
+                "No project codes available for current filters",
+                class_="alert alert-info",
+            )
+
+        d = d.copy()
+        d["Pillar_Code"] = d["Project_Code"].str[1]
+
+        # --- Total records per pillar
+        total_counts = (
+            d.groupby(["Pillar", "Pillar_Code"])
+            .size()
+            .reset_index(name="Total_Records")
+        )
+
+        # --- Unique projects per pillar
+        unique_counts = (
+            d.drop_duplicates(subset=["Project_Code"])
+            .groupby(["Pillar", "Pillar_Code"])
+            .size()
+            .reset_index(name="Unique_Projects")
+        )
+
+        # --- Merge counts
+        df_counts = pd.merge(total_counts, unique_counts, on=["Pillar", "Pillar_Code"], how="left").fillna(0)
+
+        # --- Identify project codes repeated anywhere
+        repeated_codes = d["Project_Code"][d["Project_Code"].duplicated(keep=False)].unique()
+
+        # --- Count repeated project codes per pillar
+        repeated_per_pillar = (
+            d[d["Project_Code"].isin(repeated_codes)]
+            .drop_duplicates(subset=["Project_Code"])
+            .groupby(["Pillar", "Pillar_Code"])
+            .size()
+            .reset_index(name="Repeated_Projects")
+        )
+
+        # --- Merge repeated counts
+        df_counts = pd.merge(df_counts, repeated_per_pillar, on=["Pillar", "Pillar_Code"], how="left").fillna(0)
+
+        # Count unique projects per TA per Pillar
+        projects_per_ta_pillar = (
+            d.groupby(["Pillar", "TA_x"])["Project_Code"]
+            .nunique()  # count distinct projects
+            .reset_index(name="Project_Count")
+        )
+
+        # Calculate mean number of projects per TA within each Pillar
+        mean_per_pillar = (
+            projects_per_ta_pillar.groupby("Pillar")["Project_Count"]
+            .mean()
+            .reset_index(name="Mean_Projects_Per_TA")
+        )
+
+        # --- Merge mean
+        df_counts = pd.merge(df_counts, mean_per_pillar, on=["Pillar", "Pillar"], how="left").fillna(0)
+        ######################################################################################################
+        # Calculating median number projects in a TA's for each pillar 
+        median_projects_per_ta_pillar = (
+            d.groupby(["Pillar", "TA_x"])["Project_Code"]
+            .nunique()  # count distinct projects
+            .reset_index(name="Project_Count")
+        )
+
+        # Calculate mean number of projects per TA within each Pillar
+        median_per_pillar = (
+            median_projects_per_ta_pillar.groupby("Pillar")["Project_Count"]
+            .median()
+            .reset_index(name="Median_Projects_Per_TA")
+        )
+
+        # --- Merge mean
+        df_counts = pd.merge(df_counts, median_per_pillar, on=["Pillar", "Pillar"], how="left").fillna(0)
+        ######################################################################################################
+        # Calculating minimum number projects in a TA's for each pillar 
+        min_projects_per_ta_pillar = (
+            d.groupby(["Pillar", "TA_x"])["Project_Code"]
+            .nunique()  # count distinct projects
+            .reset_index(name="Project_Count")
+        )
+
+        # Calculate mean number of projects per TA within each Pillar
+        minimum_per_pillar = (
+            min_projects_per_ta_pillar.groupby("Pillar")["Project_Count"]
+            .min()
+            .reset_index(name="Min_Projects_Per_TA")
+        )
+
+        # --- Merge mean
+        df_counts = pd.merge(df_counts, minimum_per_pillar, on=["Pillar", "Pillar"], how="left").fillna(0)
+        ######################################################################################################
+        # Calculating maximum number projects in a TA's for each pillar 
+        max_projects_per_ta_pillar = (
+            d.groupby(["Pillar", "TA_x"])["Project_Code"]
+            .nunique()  # count distinct projects
+            .reset_index(name="Project_Count")
+        )
+
+        # Calculate mean number of projects per TA within each Pillar
+        maximum_per_pillar = (
+            max_projects_per_ta_pillar.groupby("Pillar")["Project_Count"]
+            .max()
+            .reset_index(name="Max_Projects_Per_TA")
+        )
+
+        # --- Merge mean
+        df_counts = pd.merge(df_counts, maximum_per_pillar, on=["Pillar", "Pillar"], how="left").fillna(0)
+        ######################################################################################################
+        # --- Calculate proportions
+        total_records = df_counts["Total_Records"].sum()
+        df_counts["Percentage"] = (df_counts["Total_Records"] / total_records * 100).round(1)
+
+        # --- Sort by total records
+        df_counts = df_counts.sort_values(by="Total_Records", ascending=False)
+
+        # --- Build UI
+        items = []
+        for _, row in df_counts.iterrows():
+            color = pillar_colors.get(row.Pillar, "#777")
+            items.append(
+                ui.tags.li(
+                    ui.tags.div(
+                        # Row container
+                        ui.tags.div(
+                            # Column 1: Pillar name
+                            ui.tags.div(
+                                f"{row.Pillar} ({row.Pillar_Code})",
+                                class_="col-4",
+                                style=f"font-weight:600; color:{color}; font-size:1rem;"
+                            ),
+                            # Column 2: Calculations
+                            ui.tags.div(
+                                ui.tags.div(
+                                    f"Total Records: {int(row.Total_Records)} ({row.Percentage}%)",
+                                    class_="text-muted",
+                                    style="font-size:0.9rem; margin-bottom:2px;"
+                                ),
+                                ui.tags.div(
+                                    f"Unique Projects: {int(row.Unique_Projects)}",
+                                    class_="text-muted",
+                                    style="font-size:0.9rem; margin-bottom:2px;"
+                                ),
+                                ui.tags.div(
+                                    f"Repeated Projects: {int(row.Repeated_Projects)}",
+                                    class_="text-muted",
+                                    style="font-size:0.9rem; margin-bottom:2px;"
+                                ),
+                                ui.tags.div(
+                                    f"Mean Projects per TA: {row.Mean_Projects_Per_TA:.1f}",
+                                    class_="text-muted",
+                                    style="font-size:0.9rem; margin-bottom:2px;"
+                                ),
+                                ui.tags.div(
+                                    f"Median Projects per TA: {row.Median_Projects_Per_TA:.1f}",
+                                    class_="text-muted",
+                                    style="font-size:0.9rem; margin-bottom:2px;"
+                                ),
+                                ui.tags.div(
+                                    f"Range of Projects: {int(row.Min_Projects_Per_TA)} - {int(row.Max_Projects_Per_TA)}",
+                                    class_="text-muted",
+                                    style="font-size:0.9rem; margin-bottom:2px;"
+                                ),
+                                class_="col-8"
+                            ),
+                            class_="row"
+                        ),
+                    class_="list-group-item",
+                    style="padding:10px 15px;"
+                    )
+                )
+            )
+
+        return ui.div(
+            ui.tags.ul(*items, class_="list-group mb-3"),
+        )
+    # ANALYTICS TAB
+    @output
+    @render.data_frame  
+    def district_vs_pillars():
+        return render.DataTable(projects_summary)
+    
     # MAPPED PROJECTS BOXES
     @output
     @render.ui
@@ -598,7 +868,7 @@ def server(input, output, session):
         return ui.value_box(
             title="Projects Mapped",
             showcase=faicons.icon_svg(
-                "people-group", width="50px", fill="#FD9902 !important"
+                "copy", width="50px", fill="#1c773c !important"
             ),
             value=f"{int(d.TA_x.count()):,}",
         )
@@ -610,7 +880,7 @@ def server(input, output, session):
         return ui.value_box(
             title="Unique Projects",
             showcase=faicons.icon_svg(
-                "people-group", width="50px", fill="#FD9902 !important"
+                "gem", width="50px", fill="#1c773c !important"
             ),
             value=f"{int(d.Project_name.nunique()):,}",
         )
@@ -622,7 +892,7 @@ def server(input, output, session):
         return ui.value_box(
             title="Districts",
             showcase=faicons.icon_svg(
-                "people-group", width="50px", fill="#FD9902 !important"
+                "location-dot", width="50px", fill="#1c773c !important"
             ),
             value=f"{int(d.DISTRICT_x.nunique()):,}",
         )
@@ -634,7 +904,7 @@ def server(input, output, session):
         return ui.value_box(
             title="TA's",
             showcase=faicons.icon_svg(
-                "people-group", width="50px", fill="#FD9902 !important"
+                "location-crosshairs", width="50px", fill="#1c773c !important"
             ),
             value=f"{int(d.TA_x.nunique()):,}",
         )
