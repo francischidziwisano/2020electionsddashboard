@@ -290,22 +290,6 @@ app_ui = ui.page_fillable(
             ui.row(
                 x.ui.card(
                     ui.card_header("Detailed Analytics for each Pillar"),
-                    # 🔹 Colored key section
-                    ui.div(
-                        ui.tags.li(
-                            ui.tags.span("Agriculture", class_="badge ms-2", style="background:#4CAF50"),
-                            ui.tags.span("Industrialization", class_="badge ms-2", style="background:#E91E63"),
-                            ui.tags.span("Urbanisation", class_="badge ms-2", style="background:#2196F3"),
-                            ui.tags.span("Private Sector", class_="badge ms-2", style="background:#FF9800"),
-                            ui.tags.span("Human Capital Development", class_="badge ms-2", style="background:#9C27B0"),
-                            ui.tags.span("Mindset Change", class_="badge ms-2", style="background:#795548"),
-                            ui.tags.span("Enhanced Public Sector Performance", class_="badge ms-2", style="background:#9FDEF1"),
-                            ui.tags.span("Economic Infrastructure", class_="badge ms-2", style="background:#2A5D78"),
-                            ui.tags.span("Effective Governance Systems & Institutions", class_="badge ms-2", style="background:#A8577B"),
-                            ui.tags.span("Environmental sustainability", class_="badge ms-2", style="background:#C2C4E3"),
-                            class_="list-group-item d-flex justify-content-between align-items-center",
-                        )
-                    ),
                     ui.div(
                         ui.output_ui("detailed_analytics"),
                         class_="list-group",
@@ -527,7 +511,7 @@ def server(input, output, session):
         ui.update_checkbox_group("TA_x", selected=[])
 
     ######################## End of clearing filters
-    # Your existing filtered data calculation
+    # Your existing filtered data calculation for dataset 1
     @reactive.calc
     def tips_data():
         idx2 = projects.Pillar.isin(input.Pillar())
@@ -797,7 +781,7 @@ def server(input, output, session):
         # --- Build UI
         items = []
 
-        for _, row in df_counts.iterrows():  # ✅ iterate correctly
+        for _, row in df_counts.iterrows():
             color = pillar_colors.get(row["Pillar"], "#777")
 
             card = (
@@ -806,7 +790,7 @@ def server(input, output, session):
                         # Column 1: Pillar name
                         ui.tags.div(
                             f"{row.Pillar} ({row.Pillar_Code})",
-                            class_="col-md-6",
+                            class_="col-md-8",
                             style=f"font-weight:600; color:{color}; font-size:1rem;",
                         ),
                         # Column 2: Calculations
@@ -841,29 +825,34 @@ def server(input, output, session):
                                 class_="text-muted",
                                 style="font-size:0.9rem; margin-bottom:2px;",
                             ),
-                            class_="col-md-6",
+                            class_="col-md-4",
                         ),
                         class_="row",
-                    )
+                    ),
+                                                    style=(
+            f"border: 2px solid {color}; "
+            "border-radius: 12px; "
+            "box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); "
+            "padding: 10px; "
+            "margin: 10px; "
+            "overflow: visible;"
+        )
                 ),
             )
 
             items.append(card)
 
-        # --- Arrange cards side-by-side
+        # Arranging cards side-by-side
         return ui.div(
             ui.layout_columns(
             *items,
-            col_widths=[6],  # Two per row
+            col_widths=[6],
             gap="20px",
             fill=False,
             class_="row"
         ),
         style="padding:10px;")
 
-        # return ui.div(
-        #     ui.tags.ul(*items, class_="mb-3"),
-        # )
     # ANALYTICS TAB
     @output
     @render.data_frame  
