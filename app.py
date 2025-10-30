@@ -29,7 +29,7 @@ from branca.colormap import linear
 import json
 import copy
 import faicons
-from shared import app_dir, tips, projects, projects_codes, projects_summary
+from shared import projects, projects_codes, projects_summary
 
 with open("data/mw.json", "r") as f:
     districts_geojson = json.load(f)
@@ -657,7 +657,7 @@ def server(input, output, session):
         ]
 
         return ui.tags.ul(*items, class_="list-group")
-    
+
     ####################### DETAILED ANALYTICS ##############
     @output
     @render.ui
@@ -736,7 +736,7 @@ def server(input, output, session):
         # --- Merge mean
         df_counts = pd.merge(df_counts, mean_per_pillar, on=["Pillar", "Pillar"], how="left").fillna(0)
         ######################################################################################################
-        # Calculating median number projects in a TA's for each pillar 
+        # Calculating median number projects in a TA's for each pillar
         median_projects_per_ta_pillar = (
             d.groupby(["Pillar", "TA_x"])["Project_Code"]
             .nunique()  # count distinct projects
@@ -753,7 +753,7 @@ def server(input, output, session):
         # --- Merge mean
         df_counts = pd.merge(df_counts, median_per_pillar, on=["Pillar", "Pillar"], how="left").fillna(0)
         ######################################################################################################
-        # Calculating minimum number projects in a TA's for each pillar 
+        # Calculating minimum number projects in a TA's for each pillar
         min_projects_per_ta_pillar = (
             d.groupby(["Pillar", "TA_x"])["Project_Code"]
             .nunique()  # count distinct projects
@@ -770,7 +770,7 @@ def server(input, output, session):
         # --- Merge mean
         df_counts = pd.merge(df_counts, minimum_per_pillar, on=["Pillar", "Pillar"], how="left").fillna(0)
         ######################################################################################################
-        # Calculating maximum number projects in a TA's for each pillar 
+        # Calculating maximum number projects in a TA's for each pillar
         max_projects_per_ta_pillar = (
             d.groupby(["Pillar", "TA_x"])["Project_Code"]
             .nunique()  # count distinct projects
@@ -796,70 +796,80 @@ def server(input, output, session):
 
         # --- Build UI
         items = []
-        for _, row in df_counts.iterrows():
-            color = pillar_colors.get(row.Pillar, "#777")
-            items.append(
-                ui.tags.li(
-                    ui.tags.div(
-                        # Row container
+
+        for _, row in df_counts.iterrows():  # ✅ iterate correctly
+            color = pillar_colors.get(row["Pillar"], "#777")
+
+            card = (
+                ui.card(
+                    ui.div(
+                        # Column 1: Pillar name
                         ui.tags.div(
-                            # Column 1: Pillar name
-                            ui.tags.div(
-                                f"{row.Pillar} ({row.Pillar_Code})",
-                                class_="col-4",
-                                style=f"font-weight:600; color:{color}; font-size:1rem;"
-                            ),
-                            # Column 2: Calculations
-                            ui.tags.div(
-                                ui.tags.div(
-                                    f"Total Records: {int(row.Total_Records)} ({row.Percentage}%)",
-                                    class_="text-muted",
-                                    style="font-size:0.9rem; margin-bottom:2px;"
-                                ),
-                                ui.tags.div(
-                                    f"Unique Projects: {int(row.Unique_Projects)}",
-                                    class_="text-muted",
-                                    style="font-size:0.9rem; margin-bottom:2px;"
-                                ),
-                                ui.tags.div(
-                                    f"Repeated Projects: {int(row.Repeated_Projects)}",
-                                    class_="text-muted",
-                                    style="font-size:0.9rem; margin-bottom:2px;"
-                                ),
-                                ui.tags.div(
-                                    f"Mean Projects per TA: {row.Mean_Projects_Per_TA:.1f}",
-                                    class_="text-muted",
-                                    style="font-size:0.9rem; margin-bottom:2px;"
-                                ),
-                                ui.tags.div(
-                                    f"Median Projects per TA: {row.Median_Projects_Per_TA:.1f}",
-                                    class_="text-muted",
-                                    style="font-size:0.9rem; margin-bottom:2px;"
-                                ),
-                                ui.tags.div(
-                                    f"Range of Projects: {int(row.Min_Projects_Per_TA)} - {int(row.Max_Projects_Per_TA)}",
-                                    class_="text-muted",
-                                    style="font-size:0.9rem; margin-bottom:2px;"
-                                ),
-                                class_="col-8"
-                            ),
-                            class_="row"
+                            f"{row.Pillar} ({row.Pillar_Code})",
+                            class_="col-md-6",
+                            style=f"font-weight:600; color:{color}; font-size:1rem;",
                         ),
-                    class_="list-group-item",
-                    style="padding:10px 15px;"
+                        # Column 2: Calculations
+                        ui.tags.div(
+                            ui.tags.div(
+                                f"Total Records: {int(row.Total_Records)} ({row.Percentage}%)",
+                                class_="text-muted",
+                                style="font-size:0.9rem; margin-bottom:2px;",
+                            ),
+                            ui.tags.div(
+                                f"Unique Projects: {int(row.Unique_Projects)}",
+                                class_="text-muted",
+                                style="font-size:0.9rem; margin-bottom:2px;",
+                            ),
+                            ui.tags.div(
+                                f"Repeated Projects: {int(row.Repeated_Projects)}",
+                                class_="text-muted",
+                                style="font-size:0.9rem; margin-bottom:2px;",
+                            ),
+                            ui.tags.div(
+                                f"Mean Projects per TA: {row.Mean_Projects_Per_TA:.1f}",
+                                class_="text-muted",
+                                style="font-size:0.9rem; margin-bottom:2px;",
+                            ),
+                            ui.tags.div(
+                                f"Median Projects per TA: {row.Median_Projects_Per_TA:.1f}",
+                                class_="text-muted",
+                                style="font-size:0.9rem; margin-bottom:2px;",
+                            ),
+                            ui.tags.div(
+                                f"Range of Projects: {int(row.Min_Projects_Per_TA)} - {int(row.Max_Projects_Per_TA)}",
+                                class_="text-muted",
+                                style="font-size:0.9rem; margin-bottom:2px;",
+                            ),
+                            class_="col-md-6",
+                        ),
+                        class_="row",
                     )
-                )
+                ),
             )
 
+            items.append(card)
+
+        # --- Arrange cards side-by-side
         return ui.div(
-            ui.tags.ul(*items, class_="list-group mb-3"),
-        )
+            ui.layout_columns(
+            *items,
+            col_widths=[6],  # Two per row
+            gap="20px",
+            fill=False,
+            class_="row"
+        ),
+        style="padding:10px;")
+
+        # return ui.div(
+        #     ui.tags.ul(*items, class_="mb-3"),
+        # )
     # ANALYTICS TAB
     @output
     @render.data_frame  
     def district_vs_pillars():
         return render.DataTable(projects_summary)
-    
+
     # MAPPED PROJECTS BOXES
     @output
     @render.ui
