@@ -3,9 +3,11 @@ import pyproj
 import pandas as pd
 
 app_dir = Path(__file__).parent
-
+file_id = "1x_mQDMQ_e0DFRqpelmVpAI65VkE6qUjD"
+url = f"https://drive.google.com/uc?id={file_id}"
 # Project Mapping
-projects_path = "data/projects_mapping/projects.xlsx";
+projects_path = url;
+
 ta_coordinates = "data/projects_mapping/mwi_admin3_nso_points.xlsx";
 utm36s = pyproj.CRS("EPSG:32736")  # UTM Zone 36S
 wgs84 = pyproj.CRS("EPSG:4326")    # Lat/lon in decimal degrees
@@ -141,7 +143,7 @@ def project_mapping(path1, path2):
     registered_voted.to_excel("data/projects_mapping/merged.xlsx")
     return registered_voted
 
-projects = project_mapping(app_dir / projects_path, app_dir / ta_coordinates)
+projects = project_mapping(projects_path, app_dir / ta_coordinates)
 # projects_summary = pd.pivot_table(projects, index=['DISTRICT_x'], values=['Project_name'], aggfunc='count')
 
 

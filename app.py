@@ -281,7 +281,9 @@ app_ui = ui.page_fillable(
                     ),
                     ui.div(
                         ui.output_data_frame("district_vs_pillars"),
-                        ),
+                        
+                    ),
+                        style = "max-height: auto;"
                 )
             ),
         ),        
@@ -833,8 +835,8 @@ def server(input, output, session):
             f"border: 2px solid {color}; "
             "border-radius: 12px; "
             "box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); "
-            "padding: 10px; "
-            "margin: 10px; "
+            "padding: 5px; "
+            "margin: 5px; "
             "overflow: visible;"
         )
                 ),
@@ -847,7 +849,7 @@ def server(input, output, session):
             ui.layout_columns(
             *items,
             col_widths=[6],
-            gap="20px",
+            gap="10px",
             fill=False,
             class_="row"
         ),
@@ -857,7 +859,7 @@ def server(input, output, session):
     @output
     @render.data_frame  
     def district_vs_pillars():
-        return render.DataTable(projects_summary)
+        return render.DataTable(projects_summary, height="auto")
 
     # MAPPED PROJECTS BOXES
     @output
